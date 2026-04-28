@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Suplencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F6F2;
+  --surface: #FFFFFF;
+  --surface2: #F0EFE9;
+  --border: rgba(0,0,0,0.10);
+  --border2: rgba(0,0,0,0.18);
+  --text: #1A1916;
+  --text2: #6B6A65;
+  --text3: #A09F9A;
+  --green: #2D6A4F;
+  --green-bg: #D8F3DC;
+  --red: #9B2335;
+  --red-bg: #FFE5E8;
+  --amber: #92500A;
+  --amber-bg: #FEF0DC;
+  --blue: #1A4C8B;
+  --blue-bg: #DDEEFF;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { background: var(--bg); }
+body { font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; }
+
+/* LAYOUT */
+.app { max-width: 640px; margin: 0 auto; padding: 0 0 80px; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 8px;
+}
+.back-btn:hover { background: var(--surface2); }
+.topbar-info { flex: 1; min-width: 0; }
+.topbar-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.topbar-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text2);
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+}
+.topbar-btn:hover { background: var(--surface2); }
+
+/* HOME */
+.home-hero {
+  padding: 28px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.home-hero h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+.home-hero p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.sync-badge.ok { background: var(--green-bg); color: var(--green); }
+.sync-badge.off { background: var(--amber-bg); color: var(--amber); }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.btn-nueva {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 18px;
+  padding: 14px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: calc(100% - 36px);
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity 0.15s;
+}
+.btn-nueva:hover { opacity: 0.85; }
+
+.hist-label { padding: 10px 18px 6px; font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.hist-card {
+  margin: 0 14px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.hist-card:hover { background: var(--surface2); }
+.hist-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.hist-materia { font-size: 14px; font-weight: 600; }
+.hist-fecha { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.hist-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.hist-pills { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.pill { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; }
+.pill-green { background: var(--green-bg); color: var(--green); }
+.pill-red { background: var(--red-bg); color: var(--red); }
+.pill-amber { background: var(--amber-bg); color: var(--amber); }
+.pill-blue { background: var(--blue-bg); color: var(--blue); }
+
+.empty-state { padding: 48px 18px; text-align: center; color: var(--text3); font-size: 13px; line-height: 1.6; }
+.empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+/* FORMULARIO NUEVA CLASE */
+.form-body { padding: 18px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; letter-spacing: 0.02em; }
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.15s;
+}
+.form-input:focus { outline: none; border-color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-full {
+  width: 100%;
+  padding: 13px;
+  border-radius: var(--radius-lg);
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 6px;
+  transition: opacity 0.15s;
+}
+.btn-full:hover { opacity: 0.85; }
+.btn-full.secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.btn-full.green { background: var(--green); color: white; }
+
+/* CLASE ACTIVA */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.stat { text-align: center; }
+.stat-n { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; }
+.stat-l { font-size: 10px; color: var(--text3); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-n.green { color: var(--green); }
+.stat-n.red { color: var(--red); }
+.stat-n.amber { color: var(--amber); }
+
+.ocr-banner {
+  margin: 12px 14px 4px;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ocr-banner:hover { background: var(--surface2); }
+.ocr-icon-wrap { width: 38px; height: 38px; border-radius: var(--radius); background: var(--blue-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--blue); }
+.ocr-text { flex: 1; }
+.ocr-title { font-size: 13px; font-weight: 600; }
+.ocr-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.ocr-status { font-size: 11px; color: var(--blue); margin-top: 3px; display: none; font-weight: 500; }
+
+.sec-label { padding: 12px 14px 5px; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+
+.al-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.al-row:hover { background: var(--surface2); }
+.al-row.afuera { background: #FFFBF3; }
+.al-row.ausente { opacity: 0.5; }
+.al-num { width: 22px; font-size: 11px; color: var(--text3); text-align: right; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+.al-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+  background: var(--surface2); color: var(--text2);
+}
+.al-avatar.g { background: var(--green-bg); color: var(--green); }
+.al-avatar.r { background: var(--red-bg); color: var(--red); }
+.al-avatar.a { background: var(--amber-bg); color: var(--amber); }
+.al-body { flex: 1; min-width: 0; }
+.al-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.al-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.al-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+
+.add-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 14px;
+  cursor: pointer; color: var(--text3); font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.add-row:hover { color: var(--text2); background: var(--surface2); }
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto;
+  z-index: 40;
+}
+.bottom-bar .btn-full { margin: 0; }
+
+/* OVERLAY / MODAL */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 640px;
+  padding: 20px 18px 32px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 16px; }
+.modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+.modal-info { font-size: 13px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+.modal-label { font-size: 12px; font-weight: 600; color: var(--text2); display: block; margin-bottom: 6px; margin-top: 14px; }
+.modal-input {
+  width: 100%; padding: 10px 12px; font-size: 14px;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif;
+}
+.modal-input:focus { outline: none; border-color: var(--text); }
+.chip-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.chip {
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--border2); background: var(--surface);
+  cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text2);
+  font-family: 'DM Sans', sans-serif; transition: all 0.1s;
+}
+.chip.sel { background: var(--text); color: var(--bg); border-color: var(--text); }
+.modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.modal-btns .btn-full { margin: 0; }
+
+/* RESUMEN */
+.res-body { padding: 16px 14px; }
+.res-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.res-block-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.res-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.res-row:last-child { border-bottom: none; }
+.res-key { color: var(--text2); flex-shrink: 0; }
+.res-val { font-weight: 500; text-align: right; }
+.res-names { font-size: 12px; color: var(--text2); margin-top: 6px; line-height: 1.7; }
+.res-salida-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.res-salida-row:last-child { border-bottom: none; }
+.res-sal-name { font-weight: 500; min-width: 0; }
+.res-sal-detail { color: var(--text2); text-align: right; font-size: 11px; line-height: 1.5; }
+
+/* FIREBASE CONFIG */
+.config-section { margin: 0 14px; }
+.config-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+.config-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.config-sub { font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+.config-step { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; font-size: 13px; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--text); color: var(--bg); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-text { flex: 1; color: var(--text2); line-height: 1.5; }
+.step-text a { color: var(--blue); }
+.config-input-wrap { margin-top: 14px; }
+.config-input-label { font-size: 11px; font-weight: 600; color: var(--text3); margin-bottom: 4px; display: block; letter-spacing: 0.04em; text-transform: uppercase; }
+code { font-family: 'DM Mono', monospace; font-size: 12px; background: var(--surface2); padding: 2px 6px; border-radius: 4px; color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HOME -->
+<div class="screen active" id="scr-home">
+  <div class="home-hero">
+    <h1>Mis suplencias</h1>
+    <p>Asistencia, salidas y registro por clase</p>
+    <div class="sync-badge off" id="sync-badge">
+      <span class="sync-dot"></span>
+      <span id="sync-text">Sin conexión a base de datos</span>
+    </div>
+  </div>
+  <button class="btn-nueva" id="btn-nueva">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nueva suplencia
+  </button>
+  <div id="firebase-setup-home"></div>
+  <div class="hist-label">Historial</div>
+  <div id="hist-list"><div class="empty-state"><div class="empty-icon">📋</div>Todavía no hay suplencias guardadas.<br>Empezá con "Nueva suplencia".</div></div>
+</div>
+
+<!-- NUEVA CLASE -->
+<div class="screen" id="scr-nueva">
+  <div class="topbar">
+    <button class="back-btn" id="back-nueva"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">Nueva suplencia</div></div>
+  </div>
+  <div class="form-body">
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input class="form-input" type="date" id="inp-fecha">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Materia / Curso</label>
+      <input class="form-input" type="text" id="inp-materia" placeholder="Ej: Matemáticas 3°B">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Docente ausente</label>
+      <input class="form-input" type="text" id="inp-docente" placeholder="Ej: Prof. García">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Hora inicio</label>
+        <input class="form-input" type="time" id="inp-hinicio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora fin</label>
+        <input class="form-input" type="time" id="inp-hfin">
+      </div>
+    </div>
+    <button class="btn-full" id="btn-iniciar">Iniciar clase →</button>
+  </div>
+</div>
+
+<!-- CLASE ACTIVA -->
+<div class="screen" id="scr-clase">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-title" id="clase-titulo">—</div>
+      <div class="topbar-sub" id="clase-sub">—</div>
+    </div>
+    <button class="topbar-btn" id="btn-resumen-top">Resumen</button>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n green" id="st-pres">0</div><div class="stat-l">Presentes</div></div>
+    <div class="stat"><div class="stat-n red" id="st-aus">0</div><div class="stat-l">Ausentes</div></div>
+    <div class="stat"><div class="stat-n amber" id="st-afuera">0</div><div class="stat-l">Afuera</div></div>
+  </div>
+  <div class="ocr-banner" id="ocr-banner">
+    <div class="ocr-icon-wrap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </div>
+    <div class="ocr-text">
+      <div class="ocr-title">Escanear lista con cámara</div>
+      <div class="ocr-sub">Foto de la lista impresa → carga automática vía IA</div>
+      <div class="ocr-status" id="ocr-status">Analizando imagen...</div>
+    </div>
+    <input type="file" id="ocr-file" accept="image/*" capture="environment" style="display:none">
+  </div>
+  <div class="sec-label">Lista de alumnos</div>
+  <div id="lista-alumnos"></div>
+  <div class="add-row" id="btn-add-manual">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Agregar alumno manualmente
+  </div>
+  <div style="height:72px"></div>
+  <div class="bottom-bar" id="bottom-clase">
+    <button class="btn-full secondary" id="btn-finalizar">Finalizar y guardar</button>
+  </div>
+</div>
+
+<!-- RESUMEN -->
+<div class="screen" id="scr-resumen">
+  <div class="topbar">
+    <button class="back-btn" id="back-resumen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">Resumen de clase</div></div>
+  </div>
+  <div class="res-body" id="res-content"></div>
+</div>
+
+<!-- MODAL: ALUMNO -->
+<div class="overlay" id="ov-alumno">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 id="mod-nombre">Alumno</h3>
+    <p class="modal-info" id="mod-info" style="display:none"></p>
+    <label class="modal-label">Estado</label>
+    <div class="chip-group" id="mod-estado-chips"></div>
+    <div id="mod-salida-extra" style="display:none">
+      <label class="modal-label">Motivo de salida</label>
+      <div class="chip-group" id="mod-motivo-chips">
+        <div class="chip sel" data-v="Baño">Baño</div>
+        <div class="chip" data-v="Otra clase">Otra clase</div>
+        <div class="chip" data-v="Enfermería">Enfermería</div>
+        <div class="chip" data-v="Secretaría">Secretaría</div>
+        <div class="chip" data-v="Otro">Otro</div>
+      </div>
+      <div id="mod-salon-wrap" style="display:none">
+        <label class="modal-label">Nombre del salón / destino</label>
+        <input class="modal-input" type="text" id="mod-salon" placeholder="Ej: 4°A, Biblioteca...">
+      </div>
+      <label class="modal-label">Hora de salida</label>
+      <input class="modal-input" type="time" id="mod-hora-sal">
+    </div>
+    <div id="mod-regreso-extra" style="display:none">
+      <label class="modal-label">Hora de regreso</label>
+      <input class="modal-input" type="time" id="mod-hora-reg">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-full secondary" id="mod-cancel">Cancelar</button>
+      <button class="btn-full" id="mod-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AGREGAR MANUAL -->
+<div class="overlay" id="ov-add">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Agregar alumno</h3>
+    <label class="modal-label">Nombre completo</label>
+    <input class="modal-input" type="text" id="add-input" placeholder="Apellido, Nombre">
+    <div class="modal-btns">
+      <button class="btn-full secondary" id="add-cancel">Cancelar</button>
+      <button class="btn-full" id="add-ok">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR GUARDAR -->
+<div class="overlay" id="ov-guardar">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Guardar clase</h3>
+    <p class="modal-info" id="guardar-info">¿Guardás esta clase en el historial?</p>
+    <div class="modal-btns">
+      <button class="btn-full secondary" id="guardar-cancel">Cancelar</button>
+      <button class="btn-full green" id="guardar-ok">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FIREBASE CONFIG -->
+<div class="overlay" id="ov-config">
+  <div class="modal" style="border-radius:20px 20px 0 0">
+    <div class="modal-handle"></div>
+    <h3>Conectar base de datos</h3>
+    <p class="modal-info">Para sincronizar entre dispositivos necesitás un proyecto Firebase gratuito. Solo se hace una vez.</p>
+    <div style="margin-bottom:14px">
+      <div class="config-step"><div class="step-num">1</div><div class="step-text">Entrá a <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> con tu cuenta Google.</div></div>
+      <div class="config-step"><div class="step-num">2</div><div class="step-text">Creá un proyecto nuevo (cualquier nombre, desactivá Google Analytics).</div></div>
+      <div class="config-step"><div class="step-num">3</div><div class="step-text">Dentro del proyecto, andá a <strong>Realtime Database → Crear base de datos</strong>. Elegí cualquier región y seleccioná <strong>modo de prueba</strong>.</div></div>
+      <div class="config-step"><div class="step-num">4</div><div class="step-text">Volvé al inicio del proyecto, hacé clic en el ícono <code>&lt;/&gt;</code> (Web), registrá la app y copiá el valor de <code>databaseURL</code> que aparece en el código de configuración.</div></div>
+    </div>
+    <label class="modal-label">Pegá tu databaseURL aquí</label>
+    <input class="modal-input" type="url" id="cfg-dburl" placeholder="https://tu-proyecto-default-rtdb.firebaseio.com">
+    <div class="modal-btns">
+      <button class="btn-full secondary" id="cfg-cancel">Cancelar</button>
+      <button class="btn-full" id="cfg-ok">Conectar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script type="module">
+// ─── STATE ───────────────────────────────────────────────────────
+let db = null;
+let claseActual = null;
+let historial = [];
+let modAlId = null;
+let modEstado = null;
+let modMotivo = 'Baño';
+let resumenDe = null; // 'activa' | index
+
+// ─── FIREBASE ────────────────────────────────────────────────────
+async function initFirebase(dbURL) {
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { getDatabase, ref, set, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const app = initializeApp({ databaseURL: dbURL }, 'suplencias');
+    db = { getDatabase, ref, set, onValue, instance: getDatabase(app) };
+    setSyncOk(true);
+    syncFromCloud();
+    return true;
+  } catch(e) {
+    console.error(e);
+    setSyncOk(false);
+    return false;
+  }
+}
+
+function setSyncOk(ok) {
+  const badge = document.getElementById('sync-badge');
+  const txt = document.getElementById('sync-text');
+  badge.className = 'sync-badge ' + (ok ? 'ok' : 'off');
+  txt.textContent = ok ? 'Sincronizado en la nube' : 'Sin conexión a base de datos';
+  document.getElementById('firebase-setup-home').innerHTML = ok ? '' :
+    `<div style="margin:0 14px 8px"><button class="btn-full secondary" id="btn-config-db" style="font-size:13px;padding:10px">Conectar base de datos (sincronización entre dispositivos)</button></div>`;
+  if (!ok) {
+    document.getElementById('btn-config-db')?.addEventListener('click', () => openOv('ov-config'));
+  }
+}
+
+function syncFromCloud() {
+  if (!db) return;
+  const { ref, onValue, instance } = db;
+  onValue(ref(instance, 'historial'), snap => {
+    const val = snap.val();
+    historial = val ? Object.values(val) : [];
+    historial.sort((a,b) => (a.fechaTS||0) - (b.fechaTS||0));
+    renderHome();
+  });
+}
+
+async function saveToCloud(clase) {
+  if (!db) return;
+  const { ref, set, instance } = db;
+  await set(ref(instance, 'historial/' + clase.id), clase);
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function openOv(id) { document.getElementById(id).classList.add('open'); }
+function closeOv(id) { document.getElementById(id).classList.remove('open'); }
+function nowTime() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+function fmtFecha(d) {
+  if (!d) return '';
+  const [y,m,dia] = d.split('-');
+  const M = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(dia)} de ${M[parseInt(m)-1]} de ${y}`;
+}
+function initials(nombre) {
+  return nombre.split(/[\s,]+/).filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('');
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────
+function renderHome() {
+  const wrap = document.getElementById('hist-list');
+  if (!historial.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Todavía no hay suplencias guardadas.<br>Empezá con "Nueva suplencia".</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  [...historial].reverse().forEach((c, ri) => {
+    const idx = historial.length - 1 - ri;
+    const pres = c.alumnos.filter(a => a.estado !== 'ausente').length;
+    const aus = c.alumnos.filter(a => a.estado === 'ausente').length;
+    const sal = (c.salidas||[]).length;
+    const div = document.createElement('div');
+    div.className = 'hist-card';
+    div.innerHTML = `
+      <div class="hist-card-top">
+        <span class="hist-materia">${c.materia}</span>
+        <span class="hist-fecha">${fmtFecha(c.fecha)}</span>
+      </div>
+      <div class="hist-meta">${c.docente ? 'Suplente de '+c.docente+' · ' : ''}${c.hinicio||''}${c.hfin ? ' – '+c.hfin : ''}</div>
+      <div class="hist-pills">
+        <span class="pill pill-green">${pres} presentes</span>
+        ${aus ? `<span class="pill pill-red">${aus} ausentes</span>` : ''}
+        ${sal ? `<span class="pill pill-amber">${sal} salida${sal>1?'s':''}</span>` : ''}
+      </div>`;
+    div.addEventListener('click', () => { resumenDe = idx; renderResumen(c); showScreen('scr-resumen'); });
+    wrap.appendChild(div);
+  });
+}
+
+// ─── NUEVA CLASE ──────────────────────────────────────────────────
+document.getElementById('btn-nueva').addEventListener('click', () => {
+  const hoy = new Date();
+  document.getElementById('inp-fecha').value = hoy.toISOString().slice(0,10);
+  document.getElementById('inp-hinicio').value = nowTime();
+  document.getElementById('inp-hfin').value = '';
+  document.getElementById('inp-materia').value = '';
+  document.getElementById('inp-docente').value = '';
+  showScreen('scr-nueva');
+});
+document.getElementById('back-nueva').addEventListener('click', () => showScreen('scr-home'));
+
+document.getElementById('btn-iniciar').addEventListener('click', () => {
+  const fecha = document.getElementById('inp-fecha').value;
+  const materia = document.getElementById('inp-materia').value.trim();
+  if (!fecha || !materia) { alert('Completá al menos la fecha y la materia.'); return; }
+  claseActual = {
+    id: Date.now().toString(),
+    fecha,
+    fechaTS: Date.now(),
+    materia,
+    docente: document.getElementById('inp-docente').value.trim(),
+    hinicio: document.getElementById('inp-hinicio').value,
+    hfin: document.getElementById('inp-hfin').value,
+    alumnos: [],
+    salidas: []
+  };
+  document.getElementById('clase-titulo').textContent = materia;
+  document.getElementById('clase-sub').textContent =
+    (claseActual.docente ? 'Suplente de ' + claseActual.docente + ' · ' : '') + fmtFecha(fecha);
+  renderClase();
+  showScreen('scr-clase');
+});
+
+// ─── CLASE ACTIVA ─────────────────────────────────────────────────
+function renderClase() {
+  if (!claseActual) return;
+  const al = claseActual.alumnos;
+  document.getElementById('st-total').textContent = al.length;
+  document.getElementById('st-pres').textContent = al.filter(a=>a.estado==='presente').length;
+  document.getElementById('st-aus').textContent = al.filter(a=>a.estado==='ausente').length;
+  document.getElementById('st-afuera').textContent = al.filter(a=>a.estado==='afuera').length;
+  const wrap = document.getElementById('lista-alumnos');
+  wrap.innerHTML = '';
+  al.forEach((a, i) => {
+    const row = document.createElement('div');
+    const avCls = a.estado==='presente'?'g': a.estado==='ausente'?'r': a.estado==='afuera'?'a':'';
+    const badgeTxt = a.estado==='presente'?'Presente': a.estado==='ausente'?'Ausente':'Afuera';
+    const badgeCls = a.estado==='presente'?'pill pill-green': a.estado==='ausente'?'pill pill-red':'pill pill-amber';
+    let detail = '';
+    if (a.estado==='afuera') detail = `${a.motivo||'Afuera'}${a.salon?' → '+a.salon:''} · desde ${a.horaSalida||'—'}`;
+    row.className = 'al-row' + (a.estado==='afuera'?' afuera':a.estado==='ausente'?' ausente':'');
+    row.innerHTML = `
+      <span class="al-num">${i+1}</span>
+      <div class="al-avatar ${avCls}">${initials(a.nombre)}</div>
+      <div class="al-body">
+        <div class="al-name">${a.nombre}</div>
+        ${detail?`<div class="al-detail">${detail}</div>`:''}
+      </div>
+      <span class="${badgeCls}">${badgeTxt}</span>`;
+    row.addEventListener('click', () => abrirModalAlumno(a.id));
+    wrap.appendChild(row);
+  });
+}
+
+// ─── MODAL ALUMNO ─────────────────────────────────────────────────
+function abrirModalAlumno(id) {
+  modAlId = id;
+  const a = claseActual.alumnos.find(x => x.id === id);
+  modEstado = a.estado;
+  modMotivo = a.motivo || 'Baño';
+  document.getElementById('mod-nombre').textContent = a.nombre;
+  const infoEl = document.getElementById('mod-info');
+  if (a.estado === 'afuera') {
+    infoEl.style.display = 'block';
+    infoEl.textContent = `Salió a las ${a.horaSalida||'—'} (${a.motivo||''})${a.salon?' → '+a.salon:''}`;
+  } else { infoEl.style.display = 'none'; }
+
+  // estado chips
+  const ec = document.getElementById('mod-estado-chips');
+  ec.innerHTML = '';
+  [['presente','Presente'],['ausente','Ausente'],['afuera','Afuera']].forEach(([v,lbl]) => {
+    const d = document.createElement('div');
+    d.className = 'chip' + (a.estado===v?' sel':'');
+    d.textContent = lbl; d.dataset.v = v;
+    d.addEventListener('click', () => {
+      modEstado = v;
+      ec.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+      d.classList.add('sel');
+      document.getElementById('mod-salida-extra').style.display = v==='afuera'?'block':'none';
+      document.getElementById('mod-regreso-extra').style.display = (v==='presente'&&a.estado==='afuera')?'block':'none';
+      if (v==='afuera') document.getElementById('mod-hora-sal').value = nowTime();
+      if (v==='presente'&&a.estado==='afuera') document.getElementById('mod-hora-reg').value = nowTime();
+    });
+    ec.appendChild(d);
+  });
+
+  // motivo chips
+  const mc = document.getElementById('mod-motivo-chips');
+  mc.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('sel', c.dataset.v === modMotivo);
+    c.onclick = () => {
+      modMotivo = c.dataset.v;
+      mc.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      document.getElementById('mod-salon-wrap').style.display =
+        (modMotivo==='Otra clase'||modMotivo==='Otro') ? 'block' : 'none';
+    };
+  });
+
+  document.getElementById('mod-salida-extra').style.display = a.estado==='afuera'?'block':'none';
+  document.getElementById('mod-regreso-extra').style.display = 'none';
+  document.getElementById('mod-hora-sal').value = a.horaSalida || nowTime();
+  document.getElementById('mod-hora-reg').value = nowTime();
+  document.getElementById('mod-salon').value = a.salon || '';
+  document.getElementById('mod-salon-wrap').style.display =
+    (modMotivo==='Otra clase'||modMotivo==='Otro') ? 'block' : 'none';
+  openOv('ov-alumno');
+}
+
+document.getElementById('mod-cancel').addEventListener('click', () => closeOv('ov-alumno'));
+document.getElementById('mod-ok').addEventListener('click', () => {
+  const a = claseActual.alumnos.find(x => x.id === modAlId);
+  const prev = a.estado;
+  a.estado = modEstado;
+  if (modEstado === 'afuera') {
+    a.motivo = modMotivo;
+    a.horaSalida = document.getElementById('mod-hora-sal').value;
+    a.salon = document.getElementById('mod-salon').value.trim();
+    a.horaRegreso = null;
+    claseActual.salidas.push({ nombre:a.nombre, motivo:a.motivo, salon:a.salon, horaSalida:a.horaSalida, horaRegreso:null, id:a.id });
+  } else if (modEstado==='presente' && prev==='afuera') {
+    a.horaRegreso = document.getElementById('mod-hora-reg').value;
+    const s = [...claseActual.salidas].reverse().find(x=>x.id===a.id);
+    if (s) s.horaRegreso = a.horaRegreso;
+    a.motivo=null; a.horaSalida=null; a.salon=null;
+  } else {
+    a.motivo=null; a.horaSalida=null; a.salon=null; a.horaRegreso=null;
+  }
+  closeOv('ov-alumno');
+  renderClase();
+});
+
+// ─── ADD MANUAL ───────────────────────────────────────────────────
+document.getElementById('btn-add-manual').addEventListener('click', () => {
+  document.getElementById('add-input').value = '';
+  openOv('ov-add');
+});
+document.getElementById('add-cancel').addEventListener('click', () => closeOv('ov-add'));
+document.getElementById('add-ok').addEventListener('click', () => {
+  const n = document.getElementById('add-input').value.trim();
+  if (!n) return;
+  claseActual.alumnos.push({ id: Date.now(), nombre:n, estado:'presente', motivo:null, horaSalida:null, salon:null, horaRegreso:null });
+  closeOv('ov-add');
+  renderClase();
+});
+
+// ─── OCR ──────────────────────────────────────────────────────────
+document.getElementById('ocr-banner').addEventListener('click', () => document.getElementById('ocr-file').click());
+document.getElementById('ocr-file').addEventListener('change', function() {
+  if (!this.files?.[0]) return;
+  const status = document.getElementById('ocr-status');
+  status.style.display = 'block';
+  status.textContent = 'Analizando imagen con IA...';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result.split(',')[1];
+    const mime = this.files[0].type || 'image/jpeg';
+    fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+          {type:'text',text:'Lista de asistencia escolar. Extraé SOLO los nombres de alumnos, uno por línea. Sin números, sin guiones, sin encabezados. Solo nombres en formato Apellido Nombre si es posible.'}
+        ]}]
+      })
+    })
+    .then(r=>r.json())
+    .then(data=>{
+      const text = data.content.map(c=>c.text||'').join('');
+      const nombres = text.split('\n').map(n=>n.replace(/^\d+[\.\-\)\s]+/,'').trim()).filter(n=>n.length>2);
+      if (!nombres.length) { status.textContent='No se detectaron nombres. Agregá manualmente.'; return; }
+      claseActual.alumnos = nombres.map((n,i)=>({id:i+1, nombre:n, estado:'presente', motivo:null, horaSalida:null, salon:null, horaRegreso:null}));
+      status.textContent = `${nombres.length} alumnos cargados.`;
+      renderClase();
+      setTimeout(()=>{ status.style.display='none'; }, 3000);
+    })
+    .catch(()=>{ status.textContent='Error. Intentá de nuevo o agregá manualmente.'; });
+  };
+  reader.readAsDataURL(this.files[0]);
+});
+
+// ─── FINALIZAR ────────────────────────────────────────────────────
+document.getElementById('btn-finalizar').addEventListener('click', () => {
+  const aus = claseActual.alumnos.filter(a=>a.estado==='ausente').length;
+  const afuera = claseActual.alumnos.filter(a=>a.estado==='afuera').length;
+  let info = `${claseActual.alumnos.length} alumnos registrados.`;
+  if (aus) info += ` ${aus} ausente${aus>1?'s':''}.`;
+  if (afuera) info += ` ${afuera} aún afuera del aula.`;
+  document.getElementById('guardar-info').textContent = info;
+  openOv('ov-guardar');
+});
+document.getElementById('guardar-cancel').addEventListener('click', () => closeOv('ov-guardar'));
+document.getElementById('guardar-ok').addEventListener('click', async () => {
+  historial.push({...claseActual});
+  await saveToCloud(claseActual);
+  closeOv('ov-guardar');
+  renderHome();
+  showScreen('scr-home');
+  claseActual = null;
+});
+
+// ─── RESUMEN ──────────────────────────────────────────────────────
+document.getElementById('btn-resumen-top').addEventListener('click', () => {
+  if (claseActual) { resumenDe = 'activa'; renderResumen(claseActual); showScreen('scr-resumen'); }
+});
+document.getElementById('back-resumen').addEventListener('click', () => {
+  showScreen(resumenDe==='activa' ? 'scr-clase' : 'scr-home');
+});
+
+function renderResumen(c) {
+  const pres = c.alumnos.filter(a=>a.estado!=='ausente');
+  const aus = c.alumnos.filter(a=>a.estado==='ausente');
+  const afuera = c.alumnos.filter(a=>a.estado==='afuera');
+  let html = `
+    <div class="res-block">
+      <div class="res-block-title">Datos de la clase</div>
+      <div class="res-row"><span class="res-key">Materia</span><span class="res-val">${c.materia}</span></div>
+      ${c.docente?`<div class="res-row"><span class="res-key">Docente ausente</span><span class="res-val">${c.docente}</span></div>`:''}
+      <div class="res-row"><span class="res-key">Fecha</span><span class="res-val">${fmtFecha(c.fecha)}</span></div>
+      <div class="res-row"><span class="res-key">Horario</span><span class="res-val">${c.hinicio||'—'}${c.hfin?' – '+c.hfin:''}</span></div>
+    </div>
+    <div class="res-block">
+      <div class="res-block-title">Asistencia · ${c.alumnos.length} alumnos</div>
+      <div class="res-row"><span class="res-key">Presentes</span><span class="res-val" style="color:var(--green)">${pres.length}</span></div>
+      <div class="res-row"><span class="res-key">Ausentes</span><span class="res-val" style="color:var(--red)">${aus.length}</span></div>
+      ${aus.length?`<div class="res-names">${aus.map(a=>a.nombre).join(' · ')}</div>`:''}
+      ${afuera.length?`<div class="res-row" style="margin-top:6px"><span class="res-key">Actualmente afuera</span><span class="res-val" style="color:var(--amber)">${afuera.length}</span></div>`:''}
+    </div>`;
+  if (c.salidas?.length) {
+    html += `<div class="res-block"><div class="res-block-title">Registro de salidas · ${c.salidas.length}</div>`;
+    c.salidas.forEach(s => {
+      html += `<div class="res-salida-row">
+        <span class="res-sal-name">${s.nombre}</span>
+        <span class="res-sal-detail">${s.motivo}${s.salon?' → '+s.salon:''}<br>${s.horaSalida||'—'} → ${s.horaRegreso||'aún afuera'}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  if (resumenDe === 'activa') {
+    html += `<button class="btn-full green" id="btn-guardar-res" style="margin-top:4px">Guardar y cerrar clase</button>`;
+  }
+  document.getElementById('res-content').innerHTML = html;
+  if (resumenDe === 'activa') {
+    document.getElementById('btn-guardar-res').addEventListener('click', async () => {
+      historial.push({...claseActual});
+      await saveToCloud(claseActual);
+      renderHome();
+      showScreen('scr-home');
+      claseActual = null;
+    });
+  }
+}
+
+// ─── FIREBASE CONFIG MODAL ───────────────────────────────────────
+document.getElementById('cfg-cancel').addEventListener('click', () => closeOv('ov-config'));
+document.getElementById('cfg-ok').addEventListener('click', async () => {
+  const url = document.getElementById('cfg-dburl').value.trim();
+  if (!url || !url.startsWith('https://')) { alert('Pegá una URL válida de Firebase Realtime Database.'); return; }
+  localStorage.setItem('suplencias_dburl', url);
+  const ok = await initFirebase(url);
+  if (ok) { closeOv('ov-config'); renderHome(); }
+  else { alert('No se pudo conectar. Verificá la URL e intentá de nuevo.'); }
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────
+const savedURL = localStorage.getItem('suplencias_dburl');
+if (savedURL) {
+  initFirebase(savedURL);
+} else {
+  setSyncOk(false);
+  historial = JSON.parse(localStorage.getItem('suplencias_local')||'[]');
+  renderHome();
+  // fallback: guardar local si no hay firebase
+  const origSave = saveToCloud;
+  window._saveLocal = (c) => {
+    const arr = JSON.parse(localStorage.getItem('suplencias_local')||'[]');
+    const idx = arr.findIndex(x=>x.id===c.id);
+    if(idx>=0) arr[idx]=c; else arr.push(c);
+    localStorage.setItem('suplencias_local', JSON.stringify(arr));
+  };
+}
+</script>
+</body>
+</html>
