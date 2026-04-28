@@ -801,32 +801,46 @@ document.getElementById('ocr-file').addEventListener('change', function() {
   if (!this.files?.[0]) return;
   const status = document.getElementById('ocr-status');
   status.style.display = 'block';
-  status.textContent = 'Analizando imagen con IA...';
+  status.textContent = 'Analizando imagen...';
+  const VISION_KEY = 'AIzaSyDQ4RiT2b1ElvmjqteBEYIKD1J8G_Gv2_s';
   const reader = new FileReader();
   reader.onload = e => {
     const b64 = e.target.result.split(',')[1];
-    const mime = this.files[0].type || 'image/jpeg';
-    fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(`https://vision.googleapis.com/v1/images:annotate?key=${VISION_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
-          {type:'text',text:'Lista de asistencia escolar. Extraé SOLO los nombres de alumnos, uno por línea. Sin números, sin guiones, sin encabezados. Solo nombres en formato Apellido Nombre si es posible.'}
-        ]}]
+        requests: [{
+          image: { content: b64 },
+          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+        }]
       })
     })
-    .then(r=>r.json())
-    .then(data=>{
-      const text = data.content.map(c=>c.text||'').join('');
-      const nombres = text.split('\n').map(n=>n.replace(/^\d+[\.\-\)\s]+/,'').trim()).filter(n=>n.length>2);
-      if (!nombres.length) { status.textContent='No se detectaron nombres. Agregá manualmente.'; return; }
-      claseActual.alumnos = nombres.map((n,i)=>({id:i+1, nombre:n, estado:'presente', motivo:null, horaSalida:null, salon:null, horaRegreso:null}));
+    .then(r => r.json())
+    .then(data => {
+      const raw = data.responses?.[0]?.fullTextAnnotation?.text || '';
+      if (!raw) { status.textContent = 'No se detectó texto. Intentá con mejor iluminación.'; return; }
+      // Procesar el texto extraído para obtener nombres
+      const lineas = raw.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+      // Filtrar líneas que parecen nombres (no números solos, no encabezados típicos)
+      const nombres = lineas
+        .map(l => l.replace(/^\d+[\.\-\)\s]+/, '').trim()) // quitar numeración
+        .filter(l => {
+          if (l.length < 3) return false;
+          if (/^\d+$/.test(l)) return false; // solo números
+          if (/^(nombre|alumno|lista|curso|fecha|asistencia|presente|ausente)/i.test(l)) return false; // encabezados
+          return true;
+        });
+      if (!nombres.length) { status.textContent = 'No se detectaron nombres. Agregá manualmente.'; return; }
+      claseActual.alumnos = nombres.map((n, i) => ({
+        id: i + 1, nombre: n, estado: 'presente',
+        motivo: null, horaSalida: null, salon: null, horaRegreso: null
+      }));
       status.textContent = `${nombres.length} alumnos cargados.`;
       renderClase();
-      setTimeout(()=>{ status.style.display='none'; }, 3000);
+      setTimeout(() => { status.style.display = 'none'; }, 3000);
     })
-    .catch(()=>{ status.textContent='Error. Intentá de nuevo o agregá manualmente.'; });
+    .catch(() => { status.textContent = 'Error al procesar. Intentá de nuevo o agregá manualmente.'; });
   };
   reader.readAsDataURL(this.files[0]);
 });
