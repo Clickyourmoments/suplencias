@@ -350,6 +350,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--w);background:var(--bg);min-he
   border:1px solid var(--gd4);cursor:pointer}
 .mini-cal-day.other-month{opacity:.3}
 .mini-cal-day.weekend{color:rgba(255,255,255,0.35)}
+.mini-cal-day.holiday{background:rgba(255,77,77,0.13);color:var(--red);font-weight:600;border:1px solid rgba(255,77,77,0.22);cursor:help}
+.mini-cal-day.planning{background:rgba(100,120,255,0.13);color:#8899ff;font-weight:600;border:1px solid rgba(100,120,255,0.22);cursor:help}
 
 /* ══ ALERTA PERÍODO ══ */
 .alert-popup{
@@ -1719,6 +1721,12 @@ document.getElementById('dp-ok').addEventListener('click', async ()=>{
   if(!fecha){errEl.textContent='Elegí una fecha.';errEl.style.display='block';return;}
   if(!prof){errEl.textContent='Escribí el nombre del profesor.';errEl.style.display='block';return;}
   if(!perStr){errEl.textContent='Escribí al menos un período.';errEl.style.display='block';return;}
+  // Avisar si es día festivo o planning day
+  const especDp = DIAS_ESPECIALES[fecha];
+  if(especDp) {
+    const ok = confirm('⚠️ ' + fecha + ' es "' + especDp.label + '" (día sin clases).\n¿Querés registrar igual?');
+    if(!ok) return;
+  }
   const periodos = perStr.split(',').map(s=>s.trim()).filter(Boolean);
   const ts = Date.now();
   const profObj = {
@@ -2576,6 +2584,13 @@ document.querySelectorAll('#chips-salida-tipo .chip').forEach(c=>{
 document.getElementById('nueva-ok').addEventListener('click', async ()=>{
   const prof=document.getElementById('inp-prof').value.trim();
   if(!prof){alert('Escribí el nombre del profesor.');return;}
+  // Avisar si es día festivo o planning day
+  const fechaCheck = document.getElementById('inp-fecha').value || today();
+  const especChk = DIAS_ESPECIALES[fechaCheck];
+  if(especChk) {
+    const ok = confirm('⚠️ ' + fechaCheck + ' es "' + especChk.label + '" (día sin clases).\n¿Querés registrar igual?');
+    if(!ok) return;
+  }
   const custom=document.getElementById('inp-per-custom').value.trim();
   const todos=[...selPeridos,...(custom?custom.split(',').map(s=>s.trim()).filter(Boolean):[])];
   if(!todos.length){alert('Seleccioná al menos un período.');return;}
@@ -4128,6 +4143,47 @@ function initMiniCal() {
   });
 }
 
+// Días especiales del calendario escolar 2026-2027 Miami-Dade
+const DIAS_ESPECIALES = {
+  // Holidays
+  '2026-09-07': {tipo:'holiday', label:'Labor Day'},
+  '2026-11-11': {tipo:'holiday', label:'Veterans Day'},
+  '2026-11-23': {tipo:'holiday', label:'Thanksgiving Break'},
+  '2026-11-24': {tipo:'holiday', label:'Thanksgiving Break'},
+  '2026-11-25': {tipo:'holiday', label:'Thanksgiving Break'},
+  '2026-11-26': {tipo:'holiday', label:'Thanksgiving'},
+  '2026-11-27': {tipo:'holiday', label:'Thanksgiving Break'},
+  '2026-12-21': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-22': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-23': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-24': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-25': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-28': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-29': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-30': {tipo:'holiday', label:'Winter Recess'},
+  '2026-12-31': {tipo:'holiday', label:'Winter Recess'},
+  '2027-01-01': {tipo:'holiday', label:'Winter Recess'},
+  '2027-01-18': {tipo:'holiday', label:'MLK Day'},
+  '2027-02-15': {tipo:'holiday', label:'Presidents Day'},
+  '2027-03-22': {tipo:'holiday', label:'Spring Recess'},
+  '2027-03-23': {tipo:'holiday', label:'Spring Recess'},
+  '2027-03-24': {tipo:'holiday', label:'Spring Recess'},
+  '2027-03-25': {tipo:'holiday', label:'Spring Recess'},
+  '2027-03-26': {tipo:'holiday', label:'Spring Recess'},
+  '2027-05-31': {tipo:'holiday', label:'Memorial Day'},
+  // Teacher Planning Days (no hay estudiantes)
+  '2026-08-10': {tipo:'planning', label:'Teacher Planning Day'},
+  '2026-08-11': {tipo:'planning', label:'Professional Learning Day'},
+  '2026-08-12': {tipo:'planning', label:'Teacher Planning Day'},
+  '2026-09-21': {tipo:'planning', label:'Teacher Planning Day'},
+  '2026-11-03': {tipo:'planning', label:'Professional Learning Day'},
+  '2026-12-18': {tipo:'planning', label:'Teacher Planning Day'},
+  '2027-01-15': {tipo:'planning', label:'Teacher Planning Day'},
+  '2027-03-10': {tipo:'planning', label:'Teacher Planning Day'},
+  '2027-03-29': {tipo:'planning', label:'Teacher Planning Day'},
+  '2027-06-04': {tipo:'planning', label:'Teacher Planning Day'},
+};
+
 function renderMiniCal() {
   const popup = document.getElementById('mini-cal-popup');
   const today = new Date();
@@ -4165,11 +4221,14 @@ function renderMiniCal() {
     const hasClass = fechasConClase.has(dateStr);
     const dow = new Date(year, month, d).getDay();
     const isWeekend = dow === 0 || dow === 6;
+    const especial = DIAS_ESPECIALES[dateStr];
     let cls = 'mini-cal-day';
+    let title = '';
     if(isToday) cls += ' today';
     else if(hasClass) cls += ' has-class';
+    else if(especial) { cls += ' ' + especial.tipo; title = especial.label; }
     else if(isWeekend) cls += ' weekend';
-    html += '<div class="' + cls + '" data-date="' + dateStr + '">' + d + '</div>';
+    html += '<div class="' + cls + '"' + (title?' title="'+title+'"':'') + ' data-date="' + dateStr + '">' + d + '</div>';
   }
 
   // Días del mes siguiente
