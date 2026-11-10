@@ -350,8 +350,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--w);background:var(--bg);min-he
   border:1px solid var(--gd4);cursor:pointer}
 .mini-cal-day.other-month{opacity:.3}
 .mini-cal-day.weekend{color:rgba(255,255,255,0.35)}
-.mini-cal-day.holiday{background:rgba(255,77,77,0.13);color:var(--red);font-weight:600;border:1px solid rgba(255,77,77,0.22);cursor:help}
-.mini-cal-day.planning{background:rgba(100,120,255,0.13);color:#8899ff;font-weight:600;border:1px solid rgba(100,120,255,0.22);cursor:help}
+.mini-cal-day.holiday{background:rgba(255,77,77,0.13);color:var(--red);font-weight:600;border:1px solid rgba(255,77,77,0.22);height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mini-cal-day.planning{background:rgba(100,120,255,0.13);color:#8899ff;font-weight:600;border:1px solid rgba(100,120,255,0.22);height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 
 /* ══ ALERTA PERÍODO ══ */
 .alert-popup{
@@ -4226,9 +4226,12 @@ function renderMiniCal() {
     let title = '';
     if(isToday) cls += ' today';
     else if(hasClass) cls += ' has-class';
-    else if(especial) { cls += ' ' + especial.tipo; title = especial.label; }
+    else if(especial) { cls += ' ' + especial.tipo; }
     else if(isWeekend) cls += ' weekend';
-    html += '<div class="' + cls + '"' + (title?' title="'+title+'"':'') + ' data-date="' + dateStr + '">' + d + '</div>';
+    const dayContent = especial
+      ? '<span style="display:block;line-height:1">' + d + '</span><span style="display:block;font-size:7px;line-height:1;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">' + especial.label + '</span>'
+      : d;
+    html += '<div class="' + cls + '" data-date="' + dateStr + '" style="' + (especial?'padding:2px 1px;':'') + '">' + dayContent + '</div>';
   }
 
   // Días del mes siguiente
