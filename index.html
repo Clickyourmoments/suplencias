@@ -1791,7 +1791,7 @@ function renderSidebar() {
   dias.forEach((d,i)=>{
     const profs=d.profs||[];
     const afuera=profs.reduce((a,p)=>a+(p.periodos||[]).reduce((b,per)=>b+(per.regs||[]).filter(r=>!r.horaReg&&r.motivo!=='Perm. otra clase').length,0),0);
-    const profNames=profs.map(p=>p.nombre).join(', ');
+    const profNames=profs.map(p=>p.nombre+(p.materia?' ('+p.materia+')':'')).join(', ');
     const peris=[...new Set(profs.flatMap(p=>(p.periodos||[]).map(per=>per.nombre)))];
     const dc=d.dayType?DAY_COLORS[d.dayType]:'transparent';
     const div=document.createElement('div');
@@ -3238,7 +3238,9 @@ document.getElementById('btn-borrar-lista-completa').addEventListener('click', a
 // ── PAGOS ─────────────────────────────────────────────────────────
 let vistaPagos = false;
 let editPagoFecha = null;
-let pagosConfig = { tarifaFull:117, tarifaHalf:60, inicioCiclo:'2026-08-28', anoInicio:'2026-08-17' };
+let pagosConfig = { tarifaFull:117, tarifaHalf:60, inicioCiclo:'2026-09-04', anoInicio:'2026-08-17', periodosEspeciales:{} };
+// periodosEspeciales: { 'YYYY-MM-DD': { start:'YYYY-MM-DD', end:'YYYY-MM-DD' } }
+// Permite definir períodos de longitud diferente para pagos específicos
 let diasTipoCache = {};
 
 async function cargarPagosConfig() {
@@ -3266,18 +3268,30 @@ function getPeriodosPago() {
   // - Cada pago cubre las 2 semanas laborales que terminaron ~1 semana antes
   // - El período cubierto va desde (payDate - 21 días) hasta (payDate - 7 días)
   // Excepción: el primer pago puede cubrir menos días (inicio de año escolar)
+  // Excepción 2: periodosEspeciales permite definir períodos de longitud diferente
   const primerPago = new Date(pagosConfig.inicioCiclo+'T12:00:00');
   const anoInicio  = new Date((pagosConfig.anoInicio||'2026-08-17')+'T12:00:00');
   const hoy = new Date();
   const periodos = [];
+  const especiales = pagosConfig.periodosEspeciales || {};
 
   for(let i = -2; i <= 6; i++) {
     const payDate = new Date(primerPago.getTime() + i*14*24*60*60*1000);
-    // El periodo cubierto: termina 7 días antes del pago, dura 14 días
-    const end   = new Date(payDate.getTime() - 7*24*60*60*1000);
-    let   start = new Date(end.getTime() - 13*24*60*60*1000);
-    // El primer período no puede comenzar antes del inicio del año escolar
-    if(start < anoInicio) start = new Date(anoInicio);
+    const payStr = payDate.toISOString().slice(0,10);
+
+    let start, end;
+    if(especiales[payStr]) {
+      // Período especial definido manualmente
+      start = new Date(especiales[payStr].start+'T12:00:00');
+      end   = new Date(especiales[payStr].end+'T12:00:00');
+    } else {
+      // Período normal: termina 7 días antes del pago, dura 14 días
+      end   = new Date(payDate.getTime() - 7*24*60*60*1000);
+      start = new Date(end.getTime() - 13*24*60*60*1000);
+      // El primer período no puede comenzar antes del inicio del año escolar
+      if(start < anoInicio) start = new Date(anoInicio);
+    }
+
     // No mostrar períodos futuros demasiado lejanos
     if(start > new Date(hoy.getTime() + 60*24*60*60*1000)) continue;
 
@@ -3395,7 +3409,27 @@ async function renderPagos() {
     +'<input type="date" id="cfg-ano-inicio" value="'+(pagosConfig.anoInicio||'2026-08-17')+'" style="padding:4px 6px;font-size:11px;border-radius:var(--r);border:1px solid var(--brd2);background:var(--w4);color:var(--w);font-family:DM Sans,sans-serif"></div>'
     +'<div class="pay-config-row"><span class="pay-config-label">Primer dia de pago</span>'
     +'<input type="date" id="cfg-inicio" value="'+pagosConfig.inicioCiclo+'" style="padding:4px 6px;font-size:11px;border-radius:var(--r);border:1px solid var(--brd2);background:var(--w4);color:var(--w);font-family:DM Sans,sans-serif"></div>'
-    +'<button id="btn-guardar-cfg" style="width:100%;padding:7px;background:var(--gd2);border:1px solid var(--gd4);color:var(--gold);border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">Guardar</button>'
+    +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--w2);margin-bottom:4px">📅 Períodos especiales</div>'
+    +'<div style="font-size:10px;color:var(--w3);margin-bottom:6px">Cuando un pago cubre más o menos semanas de lo normal, define el rango exacto.</div>'
+    // Lista de períodos especiales ya guardados
+    + (()=>{
+        const esp = pagosConfig.periodosEspeciales||{};
+        const keys = Object.keys(esp).sort();
+        if(!keys.length) return '<div style="font-size:10px;color:var(--w3);margin-bottom:6px;font-style:italic">Ninguno definido</div>';
+        return keys.map(k=>'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+          +'<span style="font-size:10px;color:var(--w2);flex:1">Pago <b>'+k+'</b>: '+esp[k].start+' → '+esp[k].end+'</span>'
+          +'<button class="btn-del-esp" data-k="'+k+'" style="background:var(--rbg);border:1px solid var(--rbrd);color:var(--red);border-radius:4px;font-size:10px;padding:1px 6px;cursor:pointer">✕</button>'
+          +'</div>').join('');
+      })()
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">'
+    +'<input type="date" id="cfg-esp-pago" placeholder="Fecha pago" style="padding:4px 5px;font-size:10px;border-radius:var(--r);border:1px solid var(--brd2);background:var(--w4);color:var(--w);font-family:DM Sans,sans-serif;grid-column:1/-1">'
+    +'<input type="date" id="cfg-esp-start" placeholder="Desde" style="padding:4px 5px;font-size:10px;border-radius:var(--r);border:1px solid var(--brd2);background:var(--w4);color:var(--w);font-family:DM Sans,sans-serif">'
+    +'<input type="date" id="cfg-esp-end" placeholder="Hasta" style="padding:4px 5px;font-size:10px;border-radius:var(--r);border:1px solid var(--brd2);background:var(--w4);color:var(--w);font-family:DM Sans,sans-serif">'
+    +'</div>'
+    +'<button id="btn-add-esp" style="width:100%;margin-top:4px;padding:5px;background:var(--w4);border:1px solid var(--brd2);color:var(--w2);border-radius:var(--r);font-size:10px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">+ Agregar período especial</button>'
+    +'</div>'
+    +'<button id="btn-guardar-cfg" style="width:100%;padding:7px;margin-top:8px;background:var(--gd2);border:1px solid var(--gd4);color:var(--gold);border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">Guardar configuración</button>'
     +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">'
     +'<div style="font-size:10px;color:var(--w3);margin-bottom:6px">Al iniciar nuevo ano escolar se borra el historial anterior a la fecha de inicio configurada y las listas de estudiantes. Los datos no se pueden recuperar.</div>'
     +'<button id="btn-nuevo-ano-pagos" style="width:100%;padding:8px;background:var(--rbg);border:1px solid var(--rbrd);color:var(--red);border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">🎓 Iniciar nuevo año escolar</button>'
@@ -3535,6 +3569,29 @@ async function renderPagos() {
     pagosConfig.anoInicio   = document.getElementById('cfg-ano-inicio').value || pagosConfig.anoInicio || '2026-08-17';
     await guardarPagosConfig();
     renderPagos();
+  });
+
+  // Agregar período especial
+  document.getElementById('btn-add-esp').addEventListener('click', async ()=>{
+    const espPago  = document.getElementById('cfg-esp-pago').value;
+    const espStart = document.getElementById('cfg-esp-start').value;
+    const espEnd   = document.getElementById('cfg-esp-end').value;
+    if(!espPago || !espStart || !espEnd) { alert('Completa los tres campos: fecha de pago, desde y hasta.'); return; }
+    if(!pagosConfig.periodosEspeciales) pagosConfig.periodosEspeciales = {};
+    pagosConfig.periodosEspeciales[espPago] = { start: espStart, end: espEnd };
+    await guardarPagosConfig();
+    renderPagos();
+  });
+
+  // Eliminar período especial
+  main.querySelectorAll('.btn-del-esp').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const k = b.dataset.k;
+      if(!pagosConfig.periodosEspeciales) return;
+      delete pagosConfig.periodosEspeciales[k];
+      await guardarPagosConfig();
+      renderPagos();
+    });
   });
 
   main.querySelectorAll('.pay-toggle-btn').forEach(b=>{
@@ -4223,15 +4280,16 @@ function renderMiniCal() {
     const isWeekend = dow === 0 || dow === 6;
     const especial = DIAS_ESPECIALES[dateStr];
     let cls = 'mini-cal-day';
-    let title = '';
     if(isToday) cls += ' today';
     else if(hasClass) cls += ' has-class';
     else if(especial) { cls += ' ' + especial.tipo; }
     else if(isWeekend) cls += ' weekend';
-    const dayContent = especial
+    // Cuando el día tiene clase trabajada, mostrar solo el número (no el label especial)
+    const showEspecial = especial && !hasClass && !isToday;
+    const dayContent = showEspecial
       ? '<span style="display:block;line-height:1">' + d + '</span><span style="display:block;font-size:7px;line-height:1;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">' + especial.label + '</span>'
       : d;
-    html += '<div class="' + cls + '" data-date="' + dateStr + '" style="' + (especial?'padding:2px 1px;':'') + '">' + dayContent + '</div>';
+    html += '<div class="' + cls + '" data-date="' + dateStr + '" style="' + (showEspecial?'padding:2px 1px;':'') + '">' + dayContent + '</div>';
   }
 
   // Días del mes siguiente
